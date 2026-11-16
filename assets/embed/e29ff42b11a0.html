@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Houseboat mooring map</title>
+<style>
+:root{--bg:#f4f6f8;--ink:#1d2733;--muted:#6b7785;--accent:#1f6feb;--boat:#ffffff;--boatStroke:#24527a;--infra:#c9ced4;--infraStroke:#8a939c;--sel:#ff8a00}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;height:100dvh;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+body{display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid #dde2e7}
+header h1{font-size:17px;margin:0 10px 0 0;font-weight:600}
+button,.btn{font:inherit;font-size:13px;padding:6px 10px;border:1px solid #c8d0d8;background:#fff;border-radius:7px;cursor:pointer;color:var(--ink);white-space:nowrap}
+button:hover,.btn:hover{background:#eef3f8}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.danger{color:#b42318;border-color:#f1b3ad}
+button:disabled{opacity:.45;cursor:default}
+label.chk{font-size:13px;display:inline-flex;align-items:center;gap:4px;user-select:none}
+.sep{width:1px;height:22px;background:#dde2e7;margin:0 4px}
+.edit-only{display:none}
+body.editing .edit-only{display:inline-flex}
+body.editing button.edit-only{display:inline-block}
+#main{flex:1;display:flex;min-height:0;position:relative}
+#stage{flex:1 1 0;position:relative;min-width:0;min-height:0;background:#cfe3f3;overflow:hidden}
+#note{position:absolute;left:12px;top:10px;font-size:12px;color:#3d4a57;background:rgba(255,255,255,.85);border-radius:6px;padding:5px 8px;pointer-events:none;max-width:560px}
+#compass{position:absolute;right:12px;top:10px;pointer-events:none}
+.water{fill:#cfe3f3}.land{fill:#e6ecd9}.shoreline{fill:none;stroke:#6b8fb0;stroke-width:.35;stroke-linejoin:round}.geo{font-style:italic;fill:#5d7e9c;text-anchor:middle;dominant-baseline:central;pointer-events:none}.geo.landtxt{fill:#7d8c64}
+#jsonDlg{position:absolute;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:20}
+#jsonDlg.open{display:flex}
+#jsonDlg .box{background:#fff;border-radius:10px;padding:12px;width:min(560px,94%);display:flex;flex-direction:column;gap:8px}
+#jsonDlg textarea{width:100%;height:220px;font:12px ui-monospace,monospace}
+#jsonDlg .btns{display:flex;gap:6px;flex-wrap:wrap}
+#confirmBar{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:#fff;border:1px solid #f1b3ad;border-radius:8px;padding:8px 10px;display:none;gap:8px;align-items:center;z-index:15;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+#confirmBar.open{display:flex}
+svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.item{cursor:default}
+body.editing .item{cursor:move}
+.boat rect.body{fill:var(--boat);stroke:var(--boatStroke)}
+.infra rect.body{fill:var(--infra);stroke:var(--infraStroke);fill-opacity:.85}
+.item.selected rect.body{stroke:var(--sel)}
+.item text{pointer-events:none;text-anchor:middle;dominant-baseline:central;font-family:inherit}
+.boat text.nm{fill:#14324d;font-weight:600}
+.boat text.sz,.infra text.sz{fill:#4b5966}
+.infra text.nm{fill:#3c454e;font-weight:600}
+.label text.nm{fill:#b42318;font-weight:700;paint-order:stroke;stroke:#fff;stroke-linejoin:round}
+.label rect.hit{fill:transparent}
+.label.selected rect.hit{fill:rgba(255,138,0,.15);stroke:var(--sel)}
+.handle{fill:#fff;stroke:var(--sel);cursor:grab}
+.hline{stroke:var(--sel);stroke-dasharray:.4 .3}
+#tip{position:absolute;pointer-events:none;background:rgba(20,30,40,.92);color:#fff;font-size:12px;padding:5px 8px;border-radius:6px;display:none;white-space:nowrap;z-index:5}
+#scalebar{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.85);border-radius:6px;padding:4px 8px;font-size:11px}
+#scalebar .bar{height:6px;border:1px solid #333;border-top:none;margin-top:2px}
+#zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:4px}
+#zoom button{width:36px;height:36px;font-size:18px;padding:0}
+#panel{flex:none;width:290px;background:#fff;border-left:1px solid #dde2e7;padding:12px;overflow:auto;display:none}
+body.editing #panel{display:block}
+#panel h2{font-size:15px;margin:0 0 8px}
+#panel .row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+#panel .row label{font-size:12px;color:var(--muted);width:72px;flex:none}
+#panel input,#panel select{font:inherit;font-size:14px;padding:5px 7px;border:1px solid #c8d0d8;border-radius:6px;width:100%;min-width:0}
+#panel .rot{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+#panel .rot button{flex:1;padding:6px 4px}
+#panel .hint{font-size:12px;color:var(--muted);line-height:1.45}
+#panel .empty{font-size:13px;color:var(--muted)}
+#status{font-size:12px;color:var(--muted);margin-left:auto}
+@media (max-width:760px){
+  header h1{font-size:15px;width:100%}
+  #main{flex-direction:column}
+  #stage{min-height:50%}
+  #panel{width:100%;max-height:45%;border-left:none;border-top:1px solid #dde2e7}
+  #status{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Houseboat mooring map</h1>
+  <button id="fitBtn" title="Fit layout to screen">Fit</button>
+  <span id="status"></span>
+</header>
+<div id="main">
+  <div id="stage">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+      <g id="bgLayer"></g>
+      <g id="itemsLayer"></g>
+      <g id="handleLayer"></g>
+    </svg>
+    <div id="tip"></div>
+    <div id="scalebar"><span id="sbText">10 m</span><div class="bar" id="sbBar"></div></div>
+    <div id="note">Positions approximate.</div>
+    <div id="compass" title="North (approximate)"><svg viewBox="-20 -20 40 40" width="46" height="46"><circle r="19" fill="rgba(255,255,255,.9)" stroke="#9aa5b1" stroke-width="1"/><g id="needle"><path d="M0,-15 L5,2 L0,-1 L-5,2 Z" fill="#b42318"/><path d="M0,15 L5,2 L0,-1 L-5,2 Z" fill="#9aa5b1"/><text y="-6" x="0" font-size="0" fill="none">N</text></g><text id="nlab" font-size="9" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#b42318">N</text></svg></div>
+    <div id="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">&minus;</button></div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   LAYOUT DATA (edit here). Units: metres. x/y = centre of the box on the map
+   (x to the right, y downward), length = along the box's long axis, width = across,
+   rotation = degrees clockwise. type: "boat" | "infra" (pier / gangway / pontoon) | "label".
+   Initial values = layout "E" measured from Hausboty 2025 stani schema houseboats_3.skp.
+   ========================================================================== */
+const LAYOUT = [
+  {"id": "b1", "type": "boat", "name": "Fred", "x": 28.83, "y": 15, "length": 14, "width": 5, "rotation": -14.7},
+  {"id": "b2", "type": "infra", "name": "", "x": 21.92, "y": 17.95, "length": 6, "width": 1, "rotation": 78},
+  {"id": "b3", "type": "boat", "name": "Volantis", "x": 31.77, "y": 19.89, "length": 17.61, "width": 4.2, "rotation": -14.4},
+  {"id": "b4", "type": "infra", "name": "", "x": 22.05, "y": 21, "length": 20.01, "width": 2, "rotation": 78.1},
+  {"id": "b5", "type": "boat", "name": "Emma", "x": 32.19, "y": 24.78, "length": 15.6, "width": 4.2, "rotation": -14.8},
+  {"id": "b6", "type": "boat", "name": "Magdalena", "x": 35, "y": 29.2, "length": 10.8, "width": 4.2, "rotation": -8.1},
+  {"id": "b7", "type": "infra", "name": "", "x": 26.21, "y": 31.81, "length": 6, "width": 2, "rotation": -4.2},
+  {"id": "b8", "type": "boat", "name": "Jane", "x": 37.29, "y": 33.11, "length": 11.56, "width": 3.3, "rotation": -9.3},
+  {"id": "b9", "type": "infra", "name": "", "x": 30.35, "y": 36.28, "length": 7.62, "width": 2, "rotation": 81.4},
+  {"id": "b10", "type": "boat", "name": "Juana", "x": 36.54, "y": 36.92, "length": 9, "width": 3, "rotation": -8.6},
+  {"id": "b11", "type": "boat", "name": "Ginger", "x": 36.77, "y": 40.14, "length": 8, "width": 2.5, "rotation": -8.6},
+  {"id": "b12", "type": "boat", "name": "Josefina", "x": 37.73, "y": 43.05, "length": 8.5, "width": 2.5, "rotation": -9.1},
+  {"id": "b40", "type": "boat", "name": "Anahita", "x": 47.57, "y": 107.65, "length": 9.54, "width": 2, "rotation": 81.3},
+  {"id": "b13", "type": "infra", "name": "", "x": 31.41, "y": 43.51, "length": 7, "width": 2, "rotation": 81.4},
+  {"id": "b14", "type": "boat", "name": "Daniela", "x": 39, "y": 46.15, "length": 11, "width": 3, "rotation": -8.7},
+  {"id": "b15", "type": "boat", "name": "Newman", "x": 38.03, "y": 50.16, "length": 8, "width": 3.8, "rotation": -8.6},
+  {"id": "b16", "type": "infra", "name": "", "x": 32.46, "y": 50.43, "length": 7, "width": 2, "rotation": 81.4},
+  {"id": "b17", "type": "boat", "name": "Lulu", "x": 38.67, "y": 54.38, "length": 8, "width": 3.8, "rotation": -8.6},
+  {"id": "b18", "type": "infra", "name": "", "x": 33.12, "y": 56.65, "length": 5.5, "width": 2.55, "rotation": 81.4},
+  {"id": "b19", "type": "boat", "name": "Traviata", "x": 39.73, "y": 58.05, "length": 9, "width": 3, "rotation": -8.6},
+  {"id": "b20", "type": "infra", "name": "", "x": 20.54, "y": 60.52, "length": 9, "width": 2.55, "rotation": 81.4},
+  {"id": "b21", "type": "boat", "name": "Elizabeth", "x": 41.17, "y": 61.13, "length": 11, "width": 2.8, "rotation": -8.6},
+  {"id": "b22", "type": "infra", "name": "", "x": 33.5, "y": 63.98, "length": 9, "width": 4, "rotation": 81.4},
+  {"id": "b23", "type": "boat", "name": "Cassiopeia", "x": 40.72, "y": 64.38, "length": 9, "width": 3, "rotation": -8.6},
+  {"id": "b24", "type": "boat", "name": "Sara", "x": 42.33, "y": 67.95, "length": 10.8, "width": 4.2, "rotation": -8.1},
+  {"id": "b25", "type": "boat", "name": "Anna", "x": 41.56, "y": 71.66, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b26", "type": "infra", "name": "", "x": 34.77, "y": 72.38, "length": 8, "width": 4, "rotation": 81.4},
+  {"id": "b27", "type": "boat", "name": "Laura", "x": 41.98, "y": 74.41, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b28", "type": "boat", "name": "Marilyn", "x": 42.4, "y": 77.2, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b29", "type": "boat", "name": "Juliet", "x": 42.82, "y": 79.94, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b30", "type": "infra", "name": "", "x": 35.97, "y": 80.29, "length": 8, "width": 4, "rotation": 81.4},
+  {"id": "b31", "type": "boat", "name": "Romeo", "x": 43.27, "y": 82.91, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b32", "type": "boat", "name": "Audrey", "x": 43.68, "y": 85.66, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b33", "type": "boat", "name": "Patricia", "x": 44.67, "y": 88.22, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b34", "type": "boat", "name": "Luna", "x": 45, "y": 90.89, "length": 8.5, "width": 2.5, "rotation": -8.6},
+  {"id": "b35", "type": "boat", "name": "Klara", "x": 36.39, "y": 94.64, "length": 20.01, "width": 6, "rotation": 84.1},
+  {"id": "b36", "type": "boat", "name": "Margarita", "x": 44.48, "y": 112.16, "length": 17.59, "width": 4.2, "rotation": 81.3},
+  {"id": "l1", "type": "label", "name": "Footbridge", "x": 32.6, "y": 83.63, "rotation": -19.4, "size": 1},
+  {"id": "l2", "type": "label", "name": "Car exit", "x": 15.33, "y": 90.91, "rotation": 86.7},
+  {"id": "l3", "type": "label", "name": "Pedestrian / Entrance", "x": 24.36, "y": 78.34, "rotation": 18.7, "size": 1.2},
+  {"id": "l4", "type": "label", "name": "Entrance/Park C", "x": 30.54, "y": 95.91, "rotation": 85.8, "size": 1.7},
+  {"id": "b37", "type": "infra", "name": "", "x": 43.27, "y": 101.89, "length": 7, "width": 2, "rotation": -8.3},
+  {"id": "l5", "type": "label", "name": "Footbridge", "x": 37.2, "y": 103.2, "rotation": -5.8, "size": 1.8}
+]
+
+/* Approximate river bank (shore) as a polyline in map metres; water is on the upper side.
+   NORTH_DEG = direction of north on the map, degrees clockwise from "up".
+   Both are approximate - adjust here if needed. */
+const SHORE = [[12, -40], [17, 0], [20.5, 21], [28, 36], [30.8, 60], [31.6, 86], [33.4, 104], [37, 160], [40, 220]];
+const LAND_DIR = [-1,0]; // land lies on this side of the shore line
+const RIVER_LABEL = {text:'Vltava', x:52, y:55, rot:84};
+const NORTH_DEG = -8.6;
+
+(function(){
+'use strict';
+const $id=id=>document.getElementById(id)||document.createElement('div'); // public build: edit controls removed
+
+const NS='http://www.w3.org/2000/svg';
+const svg=$id('svg'), itemsLayer=$id('itemsLayer'),
+      handleLayer=$id('handleLayer'), bgLayer=$id('bgLayer'),
+      panel=$id('panel'), tip=$id('tip'), statusEl=$id('status');
+const clone=o=>JSON.parse(JSON.stringify(o));
+let items=load(), editing=false, selId=null, undoStack=[], vb=null;
+
+function load(){ return clone(LAYOUT); } // public: always the baked-in layout
+function save(){} // public: never stores anything
+let stT; function setStatus(t){statusEl.textContent=t; clearTimeout(stT); stT=setTimeout(()=>statusEl.textContent='',2500);}
+function pushUndo(){undoStack.push(JSON.stringify(items)); if(undoStack.length>100) undoStack.shift(); updUndo();}
+function undo(){ if(!undoStack.length) return; items=JSON.parse(undoStack.pop()); if(!items.find(i=>i.id===selId)) selId=null; save(); render(); updUndo(); }
+function updUndo(){$id('undoBtn').disabled=!undoStack.length;}
+const fmt=v=>(Math.round(v*100)/100).toString();
+const byId=id=>items.find(i=>i.id===id);
+function newId(p){let n=1; while(byId(p+n)) n++; return p+n;}
+
+/* ---------- background ---------- */
+function initGeo(){
+  const pts=SHORE.map(p=>p.join(',')).join(' ');
+  const last=SHORE[SHORE.length-1], first=SHORE[0];
+  const F=400; el('polygon',{class:'land',points:pts+` ${last[0]+LAND_DIR[0]*F},${last[1]+LAND_DIR[1]*F} ${first[0]+LAND_DIR[0]*F},${first[1]+LAND_DIR[1]*F}`},bgLayer);
+  el('polyline',{class:'shoreline',points:pts},bgLayer);
+  const t=el('text',{class:'geo','font-size':4,x:RIVER_LABEL.x,y:RIVER_LABEL.y,transform:`rotate(${RIVER_LABEL.rot} ${RIVER_LABEL.x} ${RIVER_LABEL.y})`},bgLayer); t.textContent=RIVER_LABEL.text+' (river)';
+  const s2=el('text',{class:'geo landtxt','font-size':2.2,x:18,y:40,transform:'rotate(82 18 40)'},bgLayer); s2.textContent='shore (approximate)';
+  $id('needle').setAttribute('transform','rotate('+NORTH_DEG+')');
+  const a=NORTH_DEG*Math.PI/180, n=$id('nlab'); n.setAttribute('x',Math.sin(a)*12.5); n.setAttribute('y',-Math.cos(a)*12.5+0.5);
+}
+/* ---------- rendering ---------- */
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e;}
+function render(){
+  itemsLayer.textContent='';
+  const order=[...items.filter(i=>i.type==='infra'),...items.filter(i=>i.type==='boat'),...items.filter(i=>i.type==='label')];
+  for(const it of order){
+    const g=el('g',{class:'item '+it.type+(it.id===selId?' selected':''),'data-id':it.id,transform:`translate(${it.x} ${it.y}) rotate(${it.rotation||0})`},itemsLayer);
+    let r=((it.rotation||0)%360+360)%360; const flip=(r>90&&r<=270); // keep text upright
+    if(it.type==='label'){
+      const fs=it.size||2.2, w=Math.max(4,(it.name||'').length*fs*0.58);
+      el('rect',{class:'hit',x:-w/2,y:-fs*0.8,width:w,height:fs*1.6,rx:.3,'stroke-width':.15},g);
+      const t=el('text',{class:'nm','font-size':fs,'stroke-width':fs*0.18,transform:flip?'rotate(180)':''},g); t.textContent=it.name||'';
+      continue;
+    }
+    const L=+it.length||1, W=+it.width||1;
+    el('rect',{class:'body',x:-L/2,y:-W/2,width:L,height:W,rx:Math.min(.35,W/6),'stroke-width':it.id===selId?.28:.14},g);
+    const tg=el('g',{transform:flip?'rotate(180)':''},g);
+    const name=it.name||'', sz=fmt(L)+' \u00d7 '+fmt(W)+' m';
+    const nfs=Math.max(.35,Math.min(W*0.42, (L*0.9)/Math.max(3,name.length*0.62)));
+    const sfs=Math.max(.3,Math.min(W*0.26,(L*0.9)/(sz.length*0.55)));
+    if(name){
+      /* Near-uniform name size: NAME_FS fills an 8.5 x 2.5 m boat; wider boats grow to at most 1.2x.
+         A name only shrinks if it would not fit inside its own box. */
+      const NAME_FS=1.5, maxLen=L*0.9;
+      let fs=Math.min(NAME_FS*Math.min(1.2,Math.max(1,W/3.3)), W*0.9/1.15);
+      const t=el('text',{class:'nm','font-size':fs},tg); t.textContent=name;
+      let len=0; try{len=t.getComputedTextLength();}catch(e){} if(!len) len=name.length*0.6*fs;
+      if(len>maxLen){ fs=fs*maxLen/len; t.setAttribute('font-size',fs); }
+      const sfs=Math.min(0.75,(W*0.92-fs*1.1)/1.2,maxLen/(sz.length*0.55));
+      /* dimensions hidden on public map */
+    } else {
+      /* dimensions hidden */
+    }
+  }
+  renderHandles(); renderPanel();
+}
+function renderHandles(){
+  handleLayer.textContent='';
+  const it=byId(selId); if(!editing||!it) return;
+  const a=(it.rotation||0)*Math.PI/180, ext=(it.type==='label'?Math.max(4,(it.name||'').length*(it.size||2.2)*0.58)/2:(+it.length)/2)+1.6;
+  const hx=it.x+Math.cos(a)*ext, hy=it.y+Math.sin(a)*ext, s=handleSize();
+  el('line',{class:'hline',x1:it.x,y1:it.y,x2:hx,y2:hy,'stroke-width':s*0.25},handleLayer);
+  const h=el('circle',{class:'handle',cx:hx,cy:hy,r:s,'stroke-width':s*0.3,'data-handle':'rot'},handleLayer);
+  el('title',{},h).textContent='Drag to rotate';
+}
+function handleSize(){ return Math.max(.5, vb.w/svg.clientWidth*9); }
+
+/* ---------- side panel ---------- */
+function renderPanel(){
+  if(!editing){panel.innerHTML='';return;}
+  const it=byId(selId);
+  if(!it){
+    panel.innerHTML=`<h2>Edit mode</h2><p class="empty">Tap a box to select it.</p>
+    <div class="hint">\u2022 Drag a box to move it.<br>\u2022 Drag the orange dot to rotate (hold Shift or enable Snap for 15\u00b0 steps).<br>\u2022 Drag empty space to pan; wheel / pinch to zoom.<br>\u2022 Changes are saved automatically in this browser. Use <b>Export JSON</b> to keep a file or move the layout to the website.</div>`;
+    return;
+  }
+  const isLabel=it.type==='label';
+  panel.innerHTML=`<h2>${isLabel?'Label':it.type==='boat'?'Houseboat':'Pier / pontoon'}</h2>
+  <div class="row"><label>Name</label><input id="fName" value="${(it.name||'').replace(/"/g,'&quot;')}"></div>
+  <div class="row"><label>Type</label><select id="fType"><option value="boat">Houseboat</option><option value="infra">Pier / pontoon / gangway</option><option value="label">Text label</option></select></div>
+  ${isLabel?`<div class="row"><label>Text size (m)</label><input id="fSize" type="number" step="0.1" min="0.3" value="${it.size||2.2}"></div>`:
+  `<div class="row"><label>Length (m)</label><input id="fL" type="number" step="0.01" min="0.1" value="${fmt(it.length)}"></div>
+   <div class="row"><label>Width (m)</label><input id="fW" type="number" step="0.01" min="0.1" value="${fmt(it.width)}"></div>`}
+  <div class="row"><label>Rotation (\u00b0)</label><input id="fR" type="number" step="0.1" value="${fmt(it.rotation||0)}"></div>
+  <div class="rot"><button data-r="-15">\u221215\u00b0</button><button data-r="-1">\u22121\u00b0</button><button data-r="-0.1">\u22120.1\u00b0</button><button data-r="0.1">+0.1\u00b0</button><button data-r="1">+1\u00b0</button><button data-r="15">+15\u00b0</button><button data-r="90">+90\u00b0</button></div>
+  <div class="row"><label>X (m)</label><input id="fX" type="number" step="0.01" value="${fmt(it.x)}"></div>
+  <div class="row"><label>Y (m)</label><input id="fY" type="number" step="0.01" value="${fmt(it.y)}"></div>
+  <div class="row"><button id="dupBtn">Duplicate</button><button id="delBtn" class="danger">Delete</button><button id="deselBtn">Done</button></div>
+  <div class="hint">Arrow keys nudge by 0.1 m (Shift: 1 m). Delete key removes the selected item.</div>`;
+  panel.querySelector('#fType').value=it.type;
+  const bind=(id,fn)=>{const e=panel.querySelector(id); if(!e) return; e.addEventListener('focus',()=>{e._u=false}); e.addEventListener('input',()=>{if(!e._u){pushUndo();e._u=true;} fn(e.value); save(); render(); keepFocus(id,e);});};
+  bind('#fName',v=>it.name=v);
+  bind('#fL',v=>{if(+v>0) it.length=+v;}); bind('#fW',v=>{if(+v>0) it.width=+v;});
+  bind('#fR',v=>{if(v!==''&&!isNaN(+v)) it.rotation=+v;}); bind('#fX',v=>{if(v!==''&&!isNaN(+v)) it.x=+v;}); bind('#fY',v=>{if(v!==''&&!isNaN(+v)) it.y=+v;});
+  bind('#fSize',v=>{if(+v>0) it.size=+v;});
+  panel.querySelector('#fType').addEventListener('change',e=>{pushUndo(); it.type=e.target.value; if(it.type!=='label'){it.length=it.length||8; it.width=it.width||2.5;} save(); render();});
+  panel.querySelectorAll('.rot button').forEach(b=>b.addEventListener('click',()=>{pushUndo(); it.rotation=Math.round(((it.rotation||0)+ +b.dataset.r)*10)/10; save(); render();}));
+  panel.querySelector('#dupBtn').onclick=()=>{pushUndo(); const c=clone(it); c.id=newId(it.type==='label'?'l':'b'); c.x+=3; c.y+=3; c.name=it.name?it.name+' copy':''; items.push(c); selId=c.id; save(); render();};
+  panel.querySelector('#delBtn').onclick=delSel;
+  panel.querySelector('#deselBtn').onclick=()=>{selId=null; render();};
+}
+function keepFocus(id,old){ // re-render replaced the inputs; restore focus & caret
+  const e=panel.querySelector(id); if(!e) return; e._u=true; e.focus();
+  try{ if(e.type==='text'){const p=old.selectionStart; e.setSelectionRange(p,p);} }catch(_){}
+  e.addEventListener('blur',()=>{e._u=false},{once:true});
+}
+function delSel(){ if(!selId) return; pushUndo(); items=items.filter(i=>i.id!==selId); selId=null; save(); render(); }
+
+/* ---------- view box: pan & zoom ---------- */
+function bounds(){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const it of items){const r=Math.max(it.length||6,it.width||2)/2; x0=Math.min(x0,it.x-r); y0=Math.min(y0,it.y-r); x1=Math.max(x1,it.x+r); y1=Math.max(y1,it.y+r);}
+  if(!isFinite(x0)) return {x:0,y:0,w:100,h:60};
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+/* Zoom-out limit: bounding box of all houseboats (rotated corners) + the 'Car exit' label, plus 5% margin each side. */
+function limitBox(){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  const add=(it,hl,hw)=>{const a=(+it.rotation||0)*Math.PI/180, c=Math.cos(a), s=Math.sin(a);
+    for(const [u,v] of [[-hl,-hw],[hl,-hw],[hl,hw],[-hl,hw]]){const x=it.x+u*c-v*s, y=it.y+u*s+v*c; x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y);}};
+  for(const it of items){
+    if(it.type==='boat') add(it,(+it.length||1)/2,(+it.width||1)/2);
+    else if(it.type==='label' && /^\s*car\s*exit\s*$/i.test(it.name||'')){const fs=it.size||2.2; add(it,Math.max(4,(it.name||'').length*fs*0.58)/2,fs*0.8);}
+  }
+  if(!isFinite(x0)) return bounds();
+  const mx=(x1-x0)*0.05, my=(y1-y0)*0.05;
+  return {x:x0-mx,y:y0-my,w:(x1-x0)+2*mx,h:(y1-y0)+2*my};
+}
+function maxViewW(b){const W=svg.clientWidth||800,H=svg.clientHeight||500; return Math.max(b.w,b.h*W/H);}
+function fit(){
+  const b=limitBox(), W=svg.clientWidth||800, H=svg.clientHeight||500, w=maxViewW(b);
+  vb={x:b.x+b.w/2-w/2,y:b.y+b.h/2-w*H/W/2,w,h:w*H/W}; applyVB();
+}
+function clampVB(){
+  const W=svg.clientWidth||800,H=svg.clientHeight||500, b=limitBox(), mw=maxViewW(b);
+  if(vb.w>mw) { const cx=vb.x+vb.w/2, cy=vb.y+vb.w*H/W/2; vb.w=mw; vb.x=cx-mw/2; vb.y=cy-mw*H/W/2; }
+  vb.h=vb.w*H/W;
+  // keep the view inside the limit box (centre it on any axis where the view is larger than the box)
+  if(vb.w>=b.w) vb.x=b.x+b.w/2-vb.w/2; else vb.x=Math.min(Math.max(vb.x,b.x),b.x+b.w-vb.w);
+  if(vb.h>=b.h) vb.y=b.y+b.h/2-vb.h/2; else vb.y=Math.min(Math.max(vb.y,b.y),b.y+b.h-vb.h);
+}
+function applyVB(){
+  const W=svg.clientWidth||800;
+  clampVB();
+  svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const mpp=vb.w/W; const nice=[1,2,5,10,20,25,50,100,200]; let m=nice.find(n=>n/mpp>=60)||200;
+  $id('sbText').textContent=m+' m'; $id('sbBar').style.width=(m/mpp)+'px';
+  renderHandles();
+}
+function zoomAt(f,cx,cy){ // cx,cy in world coords; zoom-out limited by clampVB()
+  const nw=Math.max(5,vb.w*f), k=nw/vb.w;
+  vb.x=cx-(cx-vb.x)*k; vb.y=cy-(cy-vb.y)*k; vb.w=nw; applyVB();
+}
+function toWorld(e){const r=svg.getBoundingClientRect(); return {x:vb.x+(e.clientX-r.left)/r.width*vb.w, y:vb.y+(e.clientY-r.top)/r.height*vb.h};}
+svg.addEventListener('wheel',e=>{e.preventDefault(); const p=toWorld(e); zoomAt(Math.exp(e.deltaY*0.0015),p.x,p.y);},{passive:false});
+$id('zin').onclick=()=>zoomAt(1/1.4,vb.x+vb.w/2,vb.y+vb.h/2);
+$id('zout').onclick=()=>zoomAt(1.4,vb.x+vb.w/2,vb.y+vb.h/2);
+window.addEventListener('resize',()=>{ if(vb) applyVB(); });
+
+/* ---------- pointer interaction ---------- */
+const ptrs=new Map(); let drag=null, pinch=null;
+function snapOn(e){return $id('snapChk').checked || (e&&e.shiftKey);}
+svg.addEventListener('pointerdown',e=>{
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  svg.setPointerCapture(e.pointerId);
+  if(ptrs.size===2){ // pinch
+    drag=null; const [a,b]=[...ptrs.values()];
+    pinch={d:Math.hypot(a.x-b.x,a.y-b.y),vb:{...vb},mid:toWorld({clientX:(a.x+b.x)/2,clientY:(a.y+b.y)/2})}; return;
+  }
+  const p=toWorld(e), tgt=e.target;
+  if(editing && tgt.dataset && tgt.dataset.handle==='rot'){ const it=byId(selId); pushUndo(); drag={kind:'rot',it,moved:false}; return; }
+  const g=tgt.closest && tgt.closest('.item');
+  if(g){
+    const it=byId(g.dataset.id);
+    if(editing){ if(selId!==it.id){selId=it.id; render();} drag={kind:'move',it,ox:p.x-it.x,oy:p.y-it.y,start:{x:it.x,y:it.y},moved:false}; return; }
+    showTip(it,e); // tap in view mode
+  } else if(editing && selId){ /* deselect on click in empty space (if no pan) */ drag={kind:'pan',sx:e.clientX,sy:e.clientY,vb:{...vb},deselect:true}; return; }
+  drag={kind:'pan',sx:e.clientX,sy:e.clientY,vb:{...vb}};
+});
+svg.addEventListener('pointermove',e=>{
+  if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch && ptrs.size===2){
+    const [a,b]=[...ptrs.values()], d=Math.hypot(a.x-b.x,a.y-b.y); vb={...pinch.vb};
+    zoomAt(pinch.d/d,pinch.mid.x,pinch.mid.y); return;
+  }
+  if(!drag){ if(e.pointerType==='mouse'){const g=e.target.closest&&e.target.closest('.item'); if(g) showTip(byId(g.dataset.id),e); else hideTip();} return; }
+  const r=svg.getBoundingClientRect();
+  if(drag.kind==='pan'){
+    const dx=(e.clientX-drag.sx)/r.width*vb.w, dy=(e.clientY-drag.sy)/r.height*vb.h;
+    if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>4) drag.deselect=false;
+    vb.x=drag.vb.x-dx; vb.y=drag.vb.y-dy; applyVB(); return;
+  }
+  const p=toWorld(e), it=drag.it; hideTip();
+  if(drag.kind==='move'){
+    if(!drag.moved){pushUndo(); drag.moved=true;}
+    let nx=p.x-drag.ox, ny=p.y-drag.oy; if(snapOn(e)){nx=Math.round(nx*2)/2; ny=Math.round(ny*2)/2;}
+    it.x=Math.round(nx*100)/100; it.y=Math.round(ny*100)/100;
+  } else if(drag.kind==='rot'){
+    drag.moved=true;
+    let a=Math.atan2(p.y-it.y,p.x-it.x)*180/Math.PI; a=snapOn(e)?Math.round(a/15)*15:Math.round(a*10)/10; it.rotation=a;
+  }
+  updateItemDom(it);
+});
+function endPtr(e){
+  ptrs.delete(e.pointerId); if(ptrs.size<2) pinch=null;
+  if(drag){
+    if(drag.kind==='pan'&&drag.deselect){selId=null; render();}
+    else if((drag.kind==='move'||drag.kind==='rot')&&drag.moved){save(); render();}
+    else if(drag.kind==='rot'){undoStack.pop(); updUndo();}
+  }
+  drag=null;
+}
+svg.addEventListener('pointerup',endPtr); svg.addEventListener('pointercancel',endPtr);
+svg.addEventListener('pointerleave',e=>{ if(e.pointerType==='mouse') hideTip(); });
+function updateItemDom(it){ // fast path while dragging
+  const g=itemsLayer.querySelector(`[data-id="${it.id}"]`); if(g) g.setAttribute('transform',`translate(${it.x} ${it.y}) rotate(${it.rotation||0})`);
+  renderHandles();
+  const f=id=>panel.querySelector(id); if(f('#fX')){f('#fX').value=fmt(it.x); f('#fY').value=fmt(it.y); f('#fR').value=fmt(it.rotation);}
+}
+function showTip(it,e){
+  if(!it) return; const r=$id('stage').getBoundingClientRect();
+  tip.innerHTML=it.type==='label'?`<b>${esc(it.name)}</b>`:`<b>${esc(it.name||(it.type==='infra'?'Pier / pontoon':'Unnamed'))}</b>`;
+  tip.style.display='block';
+  let x=e.clientX-r.left+14, y=e.clientY-r.top+14; if(x+tip.offsetWidth>r.width) x-=tip.offsetWidth+28; tip.style.left=x+'px'; tip.style.top=y+'px';
+  if(e.pointerType!=='mouse'){clearTimeout(tip._t); tip._t=setTimeout(hideTip,2500);}
+}
+function hideTip(){tip.style.display='none';}
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  if(!editing) return; const inField=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!inField){e.preventDefault(); undo(); return;}
+  if(inField||!selId) return; const it=byId(selId), s=e.shiftKey?1:0.1;
+  const mv={ArrowLeft:[-s,0],ArrowRight:[s,0],ArrowUp:[0,-s],ArrowDown:[0,s]}[e.key];
+  if(mv){e.preventDefault(); pushUndo(); it.x=Math.round((it.x+mv[0])*100)/100; it.y=Math.round((it.y+mv[1])*100)/100; save(); render();}
+  else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault(); delSel();}
+  else if(e.key==='Escape'){selId=null; render();}
+});
+
+/* ---------- toolbar ---------- */
+function setMode(on){editing=on; document.body.classList.toggle('editing',on); $id('modeBtn').textContent=on?'Done editing':'Edit layout'; if(!on) selId=null; hideTip(); render(); setTimeout(applyVB,0);}
+
+$id('fitBtn').onclick=fit;
+function addItem(type){
+  pushUndo(); const c={x:vb.x+vb.w/2,y:vb.y+vb.h/2};
+  const it=type==='label'?{id:newId('l'),type,name:'New label',x:c.x,y:c.y,rotation:0,size:2.2}
+    :{id:newId('b'),type,name:type==='boat'?'New boat':'',x:c.x,y:c.y,length:type==='boat'?8:6,width:type==='boat'?2.5:2,rotation:0};
+  it.x=Math.round(it.x*100)/100; it.y=Math.round(it.y*100)/100;
+  items.push(it); selId=it.id; save(); render();
+  const n=panel.querySelector('#fName'); if(n){n.focus(); n.select();}
+}
+$id('addBoatBtn').onclick=()=>addItem('boat');
+$id('addInfraBtn').onclick=()=>addItem('infra');
+$id('addLabelBtn').onclick=()=>addItem('label');
+$id('undoBtn').onclick=undo;
+function exportText(){return JSON.stringify({format:'houseboat-layout',version:2,orientation:'portrait',units:'m',exported:new Date().toISOString(),items},null,2);}
+function openDlg(title,hint,text,btns){
+  $id('jsonTitle').textContent=title; $id('jsonHint').textContent=hint;
+  const ta=$id('jsonTxt'); ta.value=text; ta.readOnly=false;
+  const bx=$id('jsonBtns'); bx.textContent='';
+  for(const [lbl,fn,cls] of btns){const b=document.createElement('button'); b.textContent=lbl; if(cls) b.className=cls; b.onclick=fn; bx.appendChild(b);}
+  $id('jsonDlg').classList.add('open');
+}
+const closeDlg=()=>$id('jsonDlg').classList.remove('open');
+$id('exportBtn').onclick=()=>{
+  const txt=exportText();
+  openDlg('Export layout','Download the file, or copy this text and keep it safe. To make it the default for everyone, paste the "items" array into LAYOUT at the top of the HTML and re-embed the page.',txt,[
+    ['Download .json',()=>{ try{ const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='houseboat-layout-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500); setStatus('Download started (if nothing happened, use Copy)'); }catch(e){ setStatus('Download blocked here - use Copy'); } },'primary'],
+    ['Copy',()=>{ const ta=$id('jsonTxt'); ta.select(); let ok=false; try{ok=document.execCommand('copy');}catch(e){} if(!ok&&navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>setStatus('Copied'),()=>setStatus('Select the text and copy it manually'));} else setStatus(ok?'Copied':'Select the text and copy it manually'); }],
+    ['Close',closeDlg]]);
+};
+function importJSON(text){
+  try{ const d=JSON.parse(text); const arr=Array.isArray(d)?d:d.items;
+    if(!Array.isArray(arr)) throw new Error('No items array found');
+    if(d&&d.version===1){ arr.forEach(it=>{const x=it.x; it.x=Math.round((60-it.y)*100)/100; it.y=x; it.rotation=(+it.rotation||0)+90;}); } // old landscape export -> portrait
+    arr.forEach((it,i)=>{ if(typeof it.x!=='number'||typeof it.y!=='number') throw new Error('Item '+(i+1)+' has no numeric x/y'); it.id=it.id||('i'+i); it.type=it.type||'boat'; it.rotation=+it.rotation||0; });
+    pushUndo(); items=arr; selId=null; save(); render(); fit(); setStatus('Imported '+arr.length+' items'); closeDlg(); return true;
+  }catch(err){ $id('jsonHint').textContent='Import failed: '+err.message; setStatus('Import failed: '+err.message); return false; }
+}
+$id('importBtn').onclick=()=>openDlg('Import layout','Choose a .json file exported earlier, or paste the JSON text here and press Import.','',[
+  ['Import pasted text',()=>importJSON($id('jsonTxt').value),'primary'],
+  ['Choose file\u2026',()=>$id('fileIn').click()],
+  ['Close',closeDlg]]);
+$id('fileIn').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{importJSON(rd.result); e.target.value='';}; rd.readAsText(f); };
+let confirmFn=null;
+function askConfirm(msg,fn){ $id('confirmMsg').textContent=msg; confirmFn=fn; $id('confirmBar').classList.add('open'); }
+$id('confirmYes').onclick=()=>{ $id('confirmBar').classList.remove('open'); if(confirmFn) confirmFn(); confirmFn=null; };
+$id('confirmNo').onclick=()=>{ $id('confirmBar').classList.remove('open'); confirmFn=null; };
+$id('resetBtn').onclick=()=>askConfirm('Restore the original layout? (Undo still works)',()=>{ pushUndo(); items=clone(LAYOUT); selId=null; save(); render(); fit(); });
+
+/* ---------- start ---------- */
+initGeo(); render(); fit(); updUndo();
+
+setTimeout(fit,50);
+window.houseboatMap={get items(){return items;}};
+})();
+</script>
+
+</body>
+</html>
