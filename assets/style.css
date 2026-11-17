@@ -2,7 +2,7 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Lato,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Devanagari","Noto Sans Thai","PingFang SC","Hiragino Sans","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
 a{color:var(--accent)}
-.hero{position:relative;min-height:190px;background-size:cover;background-position:center 60%;display:flex;flex-direction:column;justify-content:space-between}
+.hero{position:relative;min-height:190px;background-image:url('header.jpg');background-size:cover;background-position:center 60%;background-repeat:no-repeat;display:flex;flex-direction:column;justify-content:space-between}
 .hero.big{min-height:260px;justify-content:flex-end}
 .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,0) 40%,rgba(0,0,0,.35))}
 .hero>*{position:relative}
