@@ -1,25 +1,28 @@
-:root{--ink:#1d2733;--muted:#5b6775;--accent:#1565c0;--bg:#f6f9fc}
+:root{--ink:#1d2733;--muted:#5b6775;--accent:#1565c0;--bg:#f6f9fc;--card:rgba(255,255,255,.92)}
 *{box-sizing:border-box}
-body{margin:0;font-family:Lato,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Devanagari","Noto Sans Thai","PingFang SC","Hiragino Sans","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+html,body{margin:0;min-height:100%;min-height:100vh}
+body{font-family:Lato,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Devanagari","Noto Sans Thai","PingFang SC","Hiragino Sans","Malgun Gothic",sans-serif;color:var(--ink);background:transparent;line-height:1.6}
+/* Full-viewport wallpaper via a fixed layer (not background-attachment:fixed, which is buggy on iOS and stretches on tall pages). */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-color:#3a7ca5;background-image:url('header.jpg');background-size:cover;background-position:center center;background-repeat:no-repeat}
 a{color:var(--accent)}
-.hero{position:relative;height:340px;min-height:340px;background-image:url('header.jpg');background-size:cover;background-position:center center;background-repeat:no-repeat;display:flex;flex-direction:column;justify-content:space-between}
-.hero.big{height:340px;min-height:340px;justify-content:flex-end}
-.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,0) 40%,rgba(0,0,0,.35))}
+.hero{position:relative;min-height:150px;background:none;display:flex;flex-direction:column;justify-content:space-between}
+.hero.big{min-height:220px;justify-content:flex-end}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,0) 55%)}
 .hero>*{position:relative}
 .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;gap:10px}
-.brand{display:block;color:#fff;font-size:clamp(1.4rem,4vw,2.3rem);font-weight:700;text-decoration:none;padding:0 18px 18px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.brand{display:block;color:#fff;font-size:clamp(1.4rem,4vw,2.3rem);font-weight:700;text-decoration:none;padding:0 18px 18px;text-shadow:0 2px 8px rgba(0,0,0,.65)}
 .menu-btn{color:#fff;background:rgba(0,0,0,.35);padding:6px 12px;border-radius:20px;cursor:pointer;font-weight:700}
 .lang{color:#fff;background:rgba(0,0,0,.35);padding:4px 10px;border-radius:20px}
 .lang select{font-size:15px;padding:4px 6px;border-radius:8px;border:0;margin-inline-start:4px;max-width:60vw}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .wrap{display:flex;max-width:1150px;margin:0 auto;gap:24px;padding:18px}
-nav{flex:0 0 250px;background:#fff;border-radius:12px;padding:10px 6px;box-shadow:0 1px 4px rgba(0,0,0,.08);align-self:flex-start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+nav{flex:0 0 250px;background:var(--card);backdrop-filter:saturate(1.2) blur(10px);-webkit-backdrop-filter:saturate(1.2) blur(10px);border-radius:12px;padding:10px 6px;box-shadow:0 1px 4px rgba(0,0,0,.08);align-self:flex-start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 nav ul{list-style:none;margin:0;padding:0}
 nav ul ul{padding-inline-start:14px}
 nav a,nav summary{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--ink);cursor:pointer}
 nav a:hover,nav summary:hover{background:#eef4fb}
 nav a[aria-current]{background:#e3eefb;color:var(--accent);font-weight:700}
-main{flex:1;min-width:0;background:#fff;border-radius:12px;padding:20px 26px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+main{flex:1;min-width:0;background:var(--card);backdrop-filter:saturate(1.2) blur(10px);-webkit-backdrop-filter:saturate(1.2) blur(10px);border-radius:12px;padding:20px 26px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .ptitle{margin-top:0;font-size:1.8rem}
 main h2{font-size:1.35rem;margin:1.3em 0 .4em}
 main h3{font-size:1.15rem;margin:1.2em 0 .3em}
@@ -29,10 +32,10 @@ figure img{max-width:100%;height:auto;border-radius:10px}
 .embed iframe{width:100%;height:520px;border:0;border-radius:10px;background:#eef2f6}
 .note{font-size:.85rem;color:var(--muted);border-top:1px solid #e3e8ee;margin-top:28px;padding-top:10px}
 .btn{display:inline-block;background:var(--accent);color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none}
-.chooser{max-width:900px;margin:20px auto;padding:20px}
+.chooser{max-width:900px;margin:20px auto 40px;padding:20px 26px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.lc{display:block;background:#fff;border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.lc{display:block;background:rgba(255,255,255,.96);border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .lc.sug{outline:3px solid var(--accent)}
-@media(max-width:600px){.hero,.hero.big{height:220px;min-height:220px}}
+@media(max-width:600px){.hero{min-height:130px}.hero.big{min-height:180px}}
 @media(min-width:861px){.menu-btn{display:none}}
 @media(max-width:860px){.wrap{flex-direction:column;padding:10px}nav{display:none;position:static;max-height:none}#navtoggle:checked+.wrap nav{display:block}main{padding:16px}}
