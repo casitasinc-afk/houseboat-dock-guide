@@ -1,56 +1,86 @@
 :root{
   --ink:#fff;
   --muted:#e4eef6;
-  --accent:#9fd4ff;
-  --accent-hover:#ffe08a;
+  --accent:#49aad4;
+  --accent-hover:#7ec8e8;
   --shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 -1px 0 #000,0 1px 0 #000,-1px 0 0 #000,1px 0 0 #000,0 2px 6px rgba(0,0,0,.7);
+  --body-shadow:0 1px 1px #000,0 0 5px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.75);
+  --font:Lato,"Noto Sans","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Devanagari","Noto Sans Thai","Noto Sans SC","Noto Sans TC","Noto Sans JP","Noto Sans KR",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;min-height:100vh}
-body{font-family:Lato,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans Arabic","Noto Sans Hebrew","Noto Sans Devanagari","Noto Sans Thai","PingFang SC","Hiragino Sans","Malgun Gothic",sans-serif;color:var(--ink);background:transparent;line-height:1.7;font-size:17px;font-weight:600;text-shadow:0 1px 1px #000,0 0 5px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.75)}
+body{font-family:var(--font);color:var(--ink);background:transparent;font-size:11pt;font-weight:400;line-height:1.6667;text-shadow:var(--body-shadow)}
 /* Full-viewport wallpaper + a light uniform dark tint (not a panel) so white text stays readable on both the bright sky and the darker river. */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-color:#1a3a4d;background-image:linear-gradient(rgba(0,16,32,.45),rgba(0,16,32,.45)),url('header.jpg');background-size:cover,cover;background-position:center center,center center;background-repeat:no-repeat}
-a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:2px;font-weight:700}
+a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;font-weight:400}
 a:hover,a:focus{color:var(--accent-hover)}
 .hero{position:relative;min-height:150px;background:none;display:flex;flex-direction:column;justify-content:space-between}
 .hero.big{min-height:220px;justify-content:flex-end}
 .hero::before{display:none}
 .hero>*{position:relative}
 .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;gap:10px}
-.brand{display:block;color:#fff;font-size:clamp(1.4rem,4vw,2.3rem);font-weight:700;text-decoration:none;padding:0 18px 18px;text-shadow:var(--shadow)}
-.menu-btn{color:#fff;background:rgba(0,0,0,.45);padding:6px 12px;border-radius:20px;cursor:pointer;font-weight:700;border:1px solid rgba(255,255,255,.35);text-shadow:none}
-.lang{color:#fff;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35)}
-.lang select{font-size:15px;padding:4px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.3);margin-inline-start:4px;max-width:60vw;background:#1a2834;color:#fff;text-shadow:none}
+/* Cover/site title: Google Sites .LB7kq .duRjpb + .Zjiec (Lato 300, tracked) */
+.brand{display:block;color:#fff;font-family:var(--font);font-size:40pt;font-weight:300;letter-spacing:2px;line-height:1;text-decoration:none;padding:8px 18px 18px;text-shadow:var(--shadow)}
+.menu-btn{color:#fff;background:rgba(0,0,0,.45);padding:6px 12px;border-radius:20px;cursor:pointer;font-weight:400;font-size:11pt;border:1px solid rgba(255,255,255,.35);text-shadow:none;font-family:var(--font)}
+.lang{color:#fff;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.35);font-family:var(--font);font-size:11pt;font-weight:400}
+.lang select{font-family:var(--font);font-size:11pt;font-weight:400;padding:4px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.3);margin-inline-start:4px;max-width:60vw;background:#1a2834;color:#fff;text-shadow:none}
 .lang select option{background:#1a2834;color:#fff}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .wrap{display:flex;max-width:1150px;margin:0 auto;gap:24px;padding:18px}
-nav{flex:0 0 250px;background:none;backdrop-filter:none;border-radius:0;padding:6px 0;box-shadow:none;align-self:flex-start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+nav{flex:0 0 250px;background:none;backdrop-filter:none;border-radius:0;padding:6px 0;box-shadow:none;align-self:flex-start;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;font-family:var(--font);font-size:12pt;font-weight:300}
 nav ul{list-style:none;margin:0;padding:0}
 nav ul ul{padding-inline-start:14px}
-nav a,nav summary{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:#fff;cursor:pointer;background:none;font-weight:600;text-shadow:var(--shadow)}
-nav a:hover,nav summary:hover{background:none;color:var(--accent-hover)}
-nav a[aria-current]{background:none;color:var(--accent-hover);font-weight:700;box-shadow:inset 3px 0 0 var(--accent-hover)}
-[dir=rtl] nav a[aria-current]{box-shadow:inset -3px 0 0 var(--accent-hover)}
+nav a,nav summary{display:block;padding:6px 10px;border-radius:8px;text-decoration:none;color:#fff;cursor:pointer;background:none;font-weight:300;font-size:12pt;text-shadow:var(--shadow)}
+nav a:hover,nav summary:hover{background:none;color:var(--accent)}
+nav a[aria-current]{background:none;color:var(--accent);font-weight:400;box-shadow:inset 3px 0 0 var(--accent)}
+[dir=rtl] nav a[aria-current]{box-shadow:inset -3px 0 0 var(--accent)}
 main{flex:1;min-width:0;background:none;backdrop-filter:none;border-radius:0;padding:12px 8px 28px;box-shadow:none}
-.ptitle{margin-top:0;font-size:1.8rem;color:#fff;text-shadow:var(--shadow)}
-main h1,main h2,main h3,main h4,main h5,main h6{color:#fff;text-shadow:var(--shadow)}
-main h2{font-size:1.35rem;margin:1.3em 0 .4em}
-main h3{font-size:1.15rem;margin:1.2em 0 .3em}
+/* In-page titles: Google Sites .duRjpb (Lato 300, 34pt, 0.5px tracking) */
+.ptitle,main h1,main h2.c,.chooser h1{margin-top:30px;font-family:var(--font);font-size:34pt;font-weight:300;letter-spacing:.5px;line-height:1.2;color:#fff;text-shadow:var(--shadow)}
+.ptitle{margin-top:0}
+/* Section headings: Google Sites .JYVBee (Lato 400, 19pt) */
+main h2{font-family:var(--font);font-size:19pt;font-weight:400;line-height:1.4;margin:20px 0 .4em;color:#fff;text-shadow:var(--shadow)}
+main h2.c{margin-top:30px}
+main h3{font-family:var(--font);font-size:15pt;font-weight:400;line-height:1.333;margin:1.2em 0 .3em;color:#fff;text-shadow:var(--shadow)}
+main h4,main h5,main h6{color:#fff;text-shadow:var(--shadow);font-weight:400}
 .c{text-align:center}
 figure{margin:14px 0;text-align:center}
 figure img{max-width:100%;height:auto;border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,.5);outline:2px solid rgba(255,255,255,.45)}
 .embed iframe{width:100%;height:520px;border:0;border-radius:10px;background:#243442;box-shadow:0 2px 16px rgba(0,0,0,.5)}
-.note{font-size:.85rem;color:var(--muted);border-top:1px solid rgba(255,255,255,.35);margin-top:28px;padding-top:10px}
-.btn{display:inline-block;background:#0d6ebd;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;text-shadow:none;border:1px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.45)}
-.btn:hover,.btn:focus{color:#fff;background:#1480d6}
+.note{font-size:11pt;color:var(--muted);border-top:1px solid rgba(255,255,255,.35);margin-top:28px;padding-top:10px}
+.btn{display:inline-block;background:#1e6c93;color:#fff;padding:8px 16px;border-radius:20px;text-decoration:none;text-shadow:none;border:1px solid rgba(255,255,255,.35);box-shadow:0 2px 8px rgba(0,0,0,.45);font-family:var(--font);font-size:11pt;font-weight:400}
+.btn:hover,.btn:focus{color:#fff;background:#2a7eaa}
 .chooser{max-width:900px;margin:20px auto 40px;padding:20px 8px;background:none}
-.chooser h1{color:#fff;text-shadow:var(--shadow)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.lc{display:block;background:none;border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:700;color:#fff;box-shadow:none;border:1px solid rgba(255,255,255,.4)}
-.lc:hover,.lc:focus{color:var(--accent-hover);border-color:var(--accent-hover)}
-.lc.sug{outline:2px solid var(--accent-hover);outline-offset:2px}
+.lc{display:block;background:none;border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:300;font-size:12pt;color:#fff;box-shadow:none;border:1px solid rgba(255,255,255,.4)}
+.lc:hover,.lc:focus{color:var(--accent);border-color:var(--accent)}
+.lc.sug{outline:2px solid var(--accent);outline-offset:2px}
 table{width:100%;border-collapse:collapse;color:#fff}
 th,td{border:1px solid rgba(255,255,255,.4);padding:6px 8px;background:none}
-@media(max-width:600px){.hero{min-height:130px}.hero.big{min-height:180px}}
+/* Google Sites responsive title sizes */
+@media only screen and (max-width:479px){
+  .brand{font-size:40pt;letter-spacing:2px}
+  .ptitle,main h1,main h2.c,.chooser h1{font-size:24pt}
+  main h2{font-size:15pt}
+  main h3{font-size:13pt}
+  .hero{min-height:150px}
+  .hero.big{min-height:180px}
+}
+@media only screen and (min-width:480px) and (max-width:767px){
+  .brand{font-size:53pt}
+  .ptitle,main h1,main h2.c,.chooser h1{font-size:29pt}
+  main h2{font-size:17pt}
+  main h3{font-size:14pt}
+  .hero{min-height:180px}
+  .hero.big{min-height:220px}
+}
+@media only screen and (min-width:768px){
+  .brand{font-size:64pt}
+  .ptitle,main h1,main h2.c,.chooser h1{font-size:34pt}
+  main h2{font-size:19pt}
+  main h3{font-size:15pt}
+  .hero{min-height:200px}
+  .hero.big{min-height:260px}
+}
 @media(min-width:861px){.menu-btn{display:none}}
 @media(max-width:860px){.wrap{flex-direction:column;padding:10px}nav{display:none;position:static;max-height:none;background:none}#navtoggle:checked+.wrap nav{display:block}main{padding:8px 4px 24px}}
