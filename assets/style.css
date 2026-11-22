@@ -102,3 +102,22 @@ th,td{border:1px solid rgba(255,255,255,.4);padding:6px 8px;background:none}
 }
 @media(min-width:861px){.menu-btn{display:none}}
 @media(max-width:860px){.wrap{flex-direction:column;padding:10px}nav{display:none;position:static;max-height:none;background:none}#navtoggle:checked+.wrap nav{display:block}main{padding:8px 4px 24px;max-width:none}}
+
+
+/* Blackout First Aid only: compact page, full-width map, smaller panel photos in a gallery. */
+.page-blackout main{padding-top:4px;padding-bottom:16px}
+.page-blackout main h1,.page-blackout main h2,.page-blackout main h3,.page-blackout main h4,.page-blackout main p{margin-top:.4em;margin-bottom:.35em}
+.page-blackout main h2.c{margin-top:.6em}
+.page-blackout .note{margin-top:16px}
+.page-blackout .blackout-map{margin:8px 0 12px;text-align:center}
+.page-blackout .blackout-map img{width:100%;max-width:100%;height:auto;border-radius:10px}
+.page-blackout .blackout-map figcaption{margin-top:8px;text-align:left}
+.page-blackout .blackout-map figcaption h1,.page-blackout .blackout-map figcaption h2,.page-blackout .blackout-map figcaption h3,.page-blackout .blackout-map figcaption p{font-size:14pt;font-weight:400;line-height:1.4;letter-spacing:0;margin:.3em 0}
+.page-blackout .panel-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:8px 0 14px;align-items:start}
+.page-blackout .panel-gallery figure{margin:0}
+.page-blackout .panel-gallery img{width:100%;height:auto;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.5);outline:2px solid rgba(255,255,255,.45)}
+.page-blackout .panel-gallery figcaption{margin-top:6px;text-align:center}
+.page-blackout .panel-gallery figcaption h1,.page-blackout .panel-gallery figcaption h2,.page-blackout .panel-gallery figcaption h3,.page-blackout .panel-gallery figcaption p{font-size:11pt;font-weight:400;line-height:1.35;letter-spacing:0;margin:0 0 .35em}
+@media(min-width:700px){
+  .page-blackout .panel-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
